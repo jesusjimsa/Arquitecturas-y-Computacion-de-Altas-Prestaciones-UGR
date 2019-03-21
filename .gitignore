@@ -313,5 +313,6 @@ $RECYCLE.BIN/
 # Mine
 hosts.txt
 *.dat
+*.pages
 
 # End of https://www.gitignore.io/api/c,c++,java,cuda,macos,linux,python,windows,visualstudiocode
