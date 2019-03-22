@@ -18,8 +18,11 @@ int main(int argc, char **argv){
 
 	int	size, rank;
 	MPI_Status	status;
+	double start, stop, tiempo;
 	
 	sum_global = 0.0;
+
+	start = MPI_Wtime();
 
 	/*
 	 * Initialize MPI.
@@ -57,13 +60,17 @@ int main(int argc, char **argv){
 
 	MPI_Reduce(&sum_local, &sum_global, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
 	MPI_Finalize();
+
+	stop = MPI_Wtime();
 	
 	sum_global *= width;
 	diferencia = sum_global - PI;
+	tiempo = stop - start;
 
 	if(rank == 0){
 		printf("Estimation of pi:\t%0.50f\n", sum_global);
 		printf("Diferencia:\t\t%0.50f\n", fabs(diferencia));
+		printf("Tiempo en %i máquinas:\t%0.50f\n", size, tiempo);
 	}
 
 	return(0);
