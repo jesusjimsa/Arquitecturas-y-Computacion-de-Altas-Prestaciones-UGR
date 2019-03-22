@@ -30,7 +30,7 @@ int main(int argc, char **argv){
 	sum *= width;
 	diferencia = sum - PI;
 
-	printf("Estimation of pi is\t%0.50f\n", sum);
+	printf("Estimation of pi:\t%0.50f\n", sum);
 	printf("Diferencia:\t\t%0.50f\n", fabs(diferencia));
 
 	return(0);
