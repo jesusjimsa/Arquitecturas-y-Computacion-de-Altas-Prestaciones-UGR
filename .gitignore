@@ -315,5 +315,6 @@ hosts.txt
 *.dat
 *.pages
 CImg.h
+paul.jpg
 
 # End of https://www.gitignore.io/api/c,c++,java,cuda,macos,linux,python,windows,visualstudiocode
