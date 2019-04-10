@@ -316,5 +316,7 @@ hosts.txt
 *.pages
 CImg.h
 paul.jpg
+jeje.jpg
+lena.png
 
 # End of https://www.gitignore.io/api/c,c++,java,cuda,macos,linux,python,windows,visualstudiocode
