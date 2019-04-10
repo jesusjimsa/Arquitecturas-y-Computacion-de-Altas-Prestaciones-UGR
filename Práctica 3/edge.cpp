@@ -18,15 +18,15 @@ CImg<int> sobelFilter(CImg<int> img){
 
 int main(){
 	CImg<int> img("paul.jpg");
+	CImg<int> jeje(img);
 
 	for(int i = 0; i < 600; i++){
 		for(int j = 0; j < 300; j++){
-			img(i, j, 0) = 0;
-			//img(i, j, 1) = 0;
-			//img(i, j, 2) = 0;
+			jeje(i, j, 0) = 0;
+			jeje(i, j, 1) = 0;
+			jeje(i, j, 2) = 0;
 		}
 	}
 
-	CImg<int> jeje(img);
 	jeje.save("jeje.jpg");
 }
