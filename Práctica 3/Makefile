@@ -40,7 +40,7 @@ edge3: clean
 
 run: edge
 	@echo "\033[92mRun\033[0m"
-	@./edge
+	@./edge lena.png
 
 clean:
 	@echo "\033[92mClean\033[0m"
