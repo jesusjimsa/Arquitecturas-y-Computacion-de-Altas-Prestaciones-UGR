@@ -84,10 +84,54 @@ CImg<int> gaussianKernel(const CImg<int> original){
 }
 
 CImg<int> sobelFilter(const CImg<int> original){
-	// TODO
+	// Define image to store gradient intensity
+	CImg<int> imggrad(original.width(), original.height(), 1, 1, 1);
+	
+	// Define image to store gradient direction
+	CImg<int> imggraddir(original.width(), original.height(), 1, 1, 1);
+
+	// Definitions
+	int pix[3];
+	int gradx, grady;
+	int graddir, grad;
+
+	// Get pixels and calculate gradient and direction
+	for (int x = 1; x <= original.width() - 1; x++){
+		for (int y = 1; y <= original.height() - 1; y++){
+			// Get source pixels to calculate the intensity and direction
+			pix[0] = original(x, y, 0, 0);	 // main pixel
+			pix[1] = original(x - 1, y, 0, 0); // pixel left
+			pix[2] = original(x, y - 1, 0, 0); // pixel above
+
+			// get value for x gradient
+			gradx = pix[0] - pix[1];
+
+			// get value for y gradient
+			grady = pix[0] - pix[2];
+
+			// Calculate gradient direction
+			// We want this rounded to 0,1,2,3 which represents 0, 45, 90, 135 degrees
+			graddir = (int)(abs(atan2(grady, gradx)) + 0.22) * 80;
+
+			// Store gradient direction
+			imggraddir(x, y, 0, 0) = graddir;
+
+			// Calculate gradient
+			grad = (int)sqrt(gradx * gradx + grady * grady) * 2;
+
+			// Store pixel
+			imggrad(x, y, 0, 0) = grad;
+		}
+	}
+
+	return imggrad;
 }
 
-
+void edgeDetection(CImg<int> &original){
+	original = imgToGray(original);
+	original = gaussianKernel(original);
+	original = sobelFilter(original);
+}
 
 int main(int argc, char **argv){
 	if(argc != 2){
@@ -97,19 +141,10 @@ int main(int argc, char **argv){
 		exit(-1);
 	}
 
-	CImg<int> img(argv[1]);
-	CImg<int> result(imgToGray(img));
-	result = gaussianKernel(result);
-	result = sobelFilter(result);
+	const CImg<int> img(argv[1]);
+	CImg<int> result(img);
 
-
-	// for(int i = 0; i < 600; i++){
-	// 	for(int j = 0; j < 300; j++){
-	// 		result(i, j, 0) = 0;
-	// 		result(i, j, 1) = 0;
-	// 		result(i, j, 2) = 0;
-	// 	}
-	// }
+	edgeDetection(result);	
 
 	result.save("result.jpg");
 }
