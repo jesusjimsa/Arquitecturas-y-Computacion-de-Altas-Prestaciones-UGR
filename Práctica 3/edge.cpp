@@ -207,45 +207,45 @@ int main(int argc, char **argv){
 	vector< CImg<int> > img_portions;
 
 	int	size, rank;
-	// MPI_Status	status;
-	// double start, stop, tiempo;
+	MPI_Status	status;
+	double start, stop;
 
-	// sum_global = 0.0;
+	start = MPI_Wtime();
 
-	// start = MPI_Wtime();
+	/*
+	 * Initialize MPI.
+	 */
+	MPI_Init(&argc, &argv);
 
-	// /*
-	//  * Initialize MPI.
-	//  */
-	// MPI_Init(&argc, &argv);
-
+	/*
+	 * Error check the number of processes.
+	 * Determine my rank in the world group.
+	 * The sender will be rank 0 and the receiver, rank 1.
+	 */
+	MPI_Comm_size(MPI_COMM_WORLD, &size);
+	
 	img_portions = chopImage(img, size);
 
-	// /*
-	//  * Error check the number of processes.
-	//  * Determine my rank in the world group.
-	//  * The sender will be rank 0 and the receiver, rank 1.
-	//  */
-	// MPI_Comm_size(MPI_COMM_WORLD, &size);
+	if (size < 2) {
+		printf("Need at least 2 processes.\n");
+		MPI_Finalize();
 
-	// if (size < 2) {
-	// 	printf("Need at least 2 processes.\n");
-	// 	MPI_Finalize();
+		return(1);
+	}
 
-	// 	return(1);
-	// }
+	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-	// MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-
-	for(int i = 0; i < size; i++){
+	for(int i = rank; i < size; i++){
 		edgeDetection(img_portions[i]);
 	}
 
-	// MPI_Finalize();
+	MPI_Finalize();
 
-	// stop = MPI_Wtime();
+	stop = MPI_Wtime();
 
 	result = reduce(img_portions, size);
 
 	result.save("result.jpg");
+
+	cout << "Tiempo en " << size << "máquinas: " << stop - start << endl;
 }
