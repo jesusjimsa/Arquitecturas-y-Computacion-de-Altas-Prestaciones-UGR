@@ -93,10 +93,10 @@ CImg<int> gaussianKernel(const CImg<int> original){
 
 CImg<int> sobelFilter(const CImg<int> original){
 	// Define image to store gradient intensity
-	CImg<int> imggrad(original.width(), original.height(), 1, 1, 1);
+	CImg<int> imggrad(original.width(), original.height(), 1, 1, 0);
 
 	// Define image to store gradient direction
-	CImg<int> imggraddir(original.width(), original.height(), 1, 1, 1);
+	CImg<int> imggraddir(original.width(), original.height(), 1, 1, 0);
 
 	// Definitions
 	int pix[3];
@@ -132,6 +132,22 @@ CImg<int> sobelFilter(const CImg<int> original){
 		}
 	}
 
+	for(int x = 0; x < original.width(); x++){
+		imggrad(x, 0, 0, 0) = 0;
+		imggrad(x, 1, 0, 0) = 0;
+		imggrad(x, 2, 0, 0) = 0;
+		imggrad(x, original.height() - 1, 0, 0) = 0;
+	}
+
+	for(int y = 0; y < original.height(); y++){
+		imggrad(0, y, 0, 0) = 0;
+		imggrad(1, y, 0, 0) = 0;
+		imggrad(2, y, 0, 0) = 0;
+		imggrad(original.width() - 1, y, 0, 0) = 0;
+		imggrad(original.width() - 2, y, 0, 0) = 0;
+		imggrad(original.width() - 3, y, 0, 0) = 0;
+	}
+
 	return imggrad;
 }
 
@@ -148,15 +164,20 @@ vector< CImg<int> > chopImage(const CImg<int> original, int size){
 	int pixels_per_chunk = img_height / size;
 	int chunk_beginning = 0;
 	int chunk_end = pixels_per_chunk;
-	
-	for(int i = 0; i < size; i++){
-		img_portions.push_back(original.get_crop(0, chunk_beginning, img_width, chunk_end));
 
-		chunk_beginning = chunk_end;
-		chunk_end = chunk_end + pixels_per_chunk;
+	if(size == 1){
+		img_portions.push_back(original);
+	}
+	else{
+		for(int i = 0; i < size; i++){
+			img_portions.push_back(original.get_crop(0, chunk_beginning, img_width, chunk_end));
 
-		if(i == size - 1){
-			chunk_end = img_height;
+			chunk_beginning = chunk_end;
+			chunk_end = chunk_end + pixels_per_chunk;
+
+			if(i == size - 1){
+				chunk_end = img_height;
+			}
 		}
 	}
 
