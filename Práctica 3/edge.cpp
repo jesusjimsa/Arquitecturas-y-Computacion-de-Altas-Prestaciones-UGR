@@ -218,7 +218,6 @@ int main(int argc, char **argv){
 	//  * Initialize MPI.
 	//  */
 	// MPI_Init(&argc, &argv);
-	size = 16;
 
 	img_portions = chopImage(img, size);
 
