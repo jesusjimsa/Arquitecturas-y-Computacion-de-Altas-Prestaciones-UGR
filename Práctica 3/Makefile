@@ -32,11 +32,15 @@ CONF_CFLAGS = $(ANSI_CFLAGS) $(VT100_CFLAGS) $(X11_CFLAGS) $(PNG_CFLAGS) $(JPEG_
 
 edge: clean
 	@echo "\033[92mCompile\033[0m"
-	@$(CXX) -Ofast edge.cpp -o edge $(CONF_LIBS) $(CONF_CFLAGS)
+	@$(CXX) edge.cpp -o edge $(CONF_LIBS) $(CONF_CFLAGS)
 
 edge3: clean
 	@echo "\033[92mCompile efficient\033[0m"
 	@$(CXX) -O3 edge.cpp -o edge $(CONF_LIBS) $(CONF_CFLAGS)
+
+debug: clean
+	@echo "\033[92mCompile with debug options\033[0m"
+	@$(CXX) -g edge.cpp -o edge $(CONF_LIBS) $(CONF_CFLAGS)
 
 run: edge
 	@echo "\033[92mRun\033[0m"
@@ -44,6 +48,7 @@ run: edge
 
 clean:
 	@echo "\033[92mClean\033[0m"
-	@if [ -f edge ]; then \
+	@if [ -f edge  ]; then \
 		rm -f edge; \
-	fi 
+		rm -rf *.dSYM; \
+	fi
