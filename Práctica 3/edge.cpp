@@ -1,6 +1,8 @@
 #include <CImg.h>
 #include <iostream>
 #include <cmath>
+#include <mpi.h>
+#include <vector>
 
 using namespace std;
 using namespace cimg_library;
@@ -86,7 +88,7 @@ CImg<int> gaussianKernel(const CImg<int> original){
 CImg<int> sobelFilter(const CImg<int> original){
 	// Define image to store gradient intensity
 	CImg<int> imggrad(original.width(), original.height(), 1, 1, 1);
-	
+
 	// Define image to store gradient direction
 	CImg<int> imggraddir(original.width(), original.height(), 1, 1, 1);
 
@@ -133,6 +135,38 @@ void edgeDetection(CImg<int> &original){
 	original = sobelFilter(original);
 }
 
+vector< CImg<int> > chopImage(const CImg<int> original, int size){
+	vector< CImg<int> > img_portions;
+	int img_height = original.height();
+	int img_width = original.width();
+	int pixels_per_chunk = img_height / size;
+	int chunk_beginning = 0;
+	int chunk_end = pixels_per_chunk;
+	
+	for(int i = 0; i < size; i++){
+		img_portions.push_back(original.get_crop(0, chunk_beginning, img_width, chunk_end));
+
+		chunk_beginning = chunk_end;
+		chunk_end = chunk_end + pixels_per_chunk;
+
+		if(i == size - 1){
+			chunk_end = img_height;
+		}
+	}
+
+	return img_portions;
+}
+
+CImg<int> reduce(vector< CImg<int> > pieces, int size){
+	CImg<int> result;
+
+	for(int i = 0; i < size; i++){
+		result = result.append(pieces[i], 'y');
+	}
+
+	return result;
+}
+
 int main(int argc, char **argv){
 	if(argc != 2){
 		cout << "\033[31mTienes que escribir la ruta de la imagen!!\033[0m" << endl;
@@ -143,8 +177,49 @@ int main(int argc, char **argv){
 
 	const CImg<int> img(argv[1]);
 	CImg<int> result(img);
+	vector< CImg<int> > img_portions;
 
-	edgeDetection(result);	
+	int	size, rank;
+	// MPI_Status	status;
+	// double start, stop, tiempo;
+
+	// sum_global = 0.0;
+
+	// start = MPI_Wtime();
+
+	// /*
+	//  * Initialize MPI.
+	//  */
+	// MPI_Init(&argc, &argv);
+	size = 16;
+
+	img_portions = chopImage(img, size);
+
+	// /*
+	//  * Error check the number of processes.
+	//  * Determine my rank in the world group.
+	//  * The sender will be rank 0 and the receiver, rank 1.
+	//  */
+	// MPI_Comm_size(MPI_COMM_WORLD, &size);
+
+	// if (size < 2) {
+	// 	printf("Need at least 2 processes.\n");
+	// 	MPI_Finalize();
+
+	// 	return(1);
+	// }
+
+	// MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+	for(int i = 0; i < size; i++){
+		edgeDetection(img_portions[i]);
+	}
+
+	// MPI_Finalize();
+
+	// stop = MPI_Wtime();
+
+	result = reduce(img_portions, size);
 
 	result.save("result.jpg");
 }
