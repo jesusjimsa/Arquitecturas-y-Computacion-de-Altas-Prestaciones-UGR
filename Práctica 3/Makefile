@@ -1,4 +1,5 @@
 CXX = g++ -std=c++11 -pedantic
+MPI = mpiCC -std=c++11 -pedantic
 ANSI_CFLAGS = -I.. -Wall -Wextra -Wfatal-errors -Werror=unknown-pragmas -Werror=unused-label
 VT100_CFLAGS = -Dcimg_use_vt100
 
@@ -31,6 +32,10 @@ edge: clean
 edge3: clean
 	@echo "\033[92mCompile efficient\033[0m"
 	@$(CXX) -O3 edge.cpp -o edge $(CONF_LIBS) $(CONF_CFLAGS)
+
+mpi: clean
+	@echo "\033[92mCompile MPI\033[0m"
+	$(MPI) edge.cpp -o edge $(CONF_LIBS) $(CONF_CFLAGS)
 
 debug: clean
 	@echo "\033[92mCompile with debug options\033[0m"
