@@ -206,46 +206,46 @@ int main(int argc, char **argv){
 	CImg<int> result(img);
 	vector< CImg<int> > img_portions;
 
-	// int	size, rank;
-	// MPI_Status	status;
-	// double start, stop;
-int size = 1;
-	// start = MPI_Wtime();
+	int	size, rank;
+	MPI_Status	status;
+	double start, stop;
+
+	start = MPI_Wtime();
 
 	/*
 	 * Initialize MPI.
 	 */
-	// MPI_Init(&argc, &argv);
+	MPI_Init(&argc, &argv);
 
 	/*
 	 * Error check the number of processes.
 	 * Determine my rank in the world group.
 	 * The sender will be rank 0 and the receiver, rank 1.
 	 */
-	// MPI_Comm_size(MPI_COMM_WORLD, &size);
-	
+	MPI_Comm_size(MPI_COMM_WORLD, &size);
+
 	img_portions = chopImage(img, size);
 
-	// if (size < 2) {
-	// 	printf("Need at least 2 processes.\n");
-	// 	MPI_Finalize();
+	if (size < 2) {
+		printf("Need at least 2 processes.\n");
+		MPI_Finalize();
 
-	// 	return(1);
-	// }
+		return(1);
+	}
 
-	// MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-	// for(int i = rank; i < size; i++){
-		edgeDetection(img_portions[0]);
-	// }
+	for(int i = rank; i < size; i++){
+		edgeDetection(img_portions[i]);
+	}
 
-	// MPI_Finalize();
+	MPI_Finalize();
 
-	// stop = MPI_Wtime();
+	stop = MPI_Wtime();
 
 	result = reduce(img_portions, size);
 
 	result.save("result.jpg");
 
-	// cout << "Tiempo en " << size << "máquinas: " << stop - start << endl;
+	cout << "Tiempo en " << size << "máquinas: " << stop - start << endl;
 }
