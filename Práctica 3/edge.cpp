@@ -208,7 +208,7 @@ int main(int argc, char **argv){
 
 	int	size, rank;
 	MPI_Status	status;
-	double start, stop;
+	double start, stop, tiempo;
 
 	start = MPI_Wtime();
 
@@ -243,9 +243,13 @@ int main(int argc, char **argv){
 
 	stop = MPI_Wtime();
 
-	result = reduce(img_portions, size);
+	tiempo = stop - start;
 
-	result.save("result.jpg");
+	if(rank == 0){
+		result = reduce(img_portions, size);
 
-	cout << "Tiempo en " << size << "máquinas: " << stop - start << endl;
+		result.save("result.jpg");
+
+		cout << "Tiempo en " << size << "máquinas: " << tiempo << endl;
+	}
 }
