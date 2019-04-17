@@ -248,7 +248,7 @@ int main(int argc, char **argv){
 	if(rank == 0){
 		result = reduce(img_portions, size);
 
-		result.save("result.png");
+		result.save("result.jpg");
 
 		cout << "Tiempo en " << size << " máquinas: " << tiempo << endl;
 	}
