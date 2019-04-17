@@ -69,7 +69,7 @@ CImg<int> gaussianKernel(const CImg<int> original){
 				for (dy = -2; dy <= 2; dy++){
 					pixelweight = weighting[dx + 2][dy + 2];
 
-					
+
 					// Get pixel
 					if(x + dx >= original.width() || y + dy >= original.height()){
 						pixel = original(x, y, 0, 0);
