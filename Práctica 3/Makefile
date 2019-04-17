@@ -3,8 +3,6 @@ MPI = mpiCC -std=c++11 -pedantic
 ANSI_CFLAGS = -I.. -Wall -Wextra -Wfatal-errors -Werror=unknown-pragmas -Werror=unused-label
 VT100_CFLAGS = -Dcimg_use_vt100
 
-FILES = edge
-
 # Flags used to disable display capablities of CImg
 NODISPLAY_CFLAGS = -Dcimg_display=0
 
@@ -35,7 +33,7 @@ edge3: clean
 
 mpi: clean
 	@echo "\033[92mCompile MPI\033[0m"
-	$(MPI) edge.cpp -o edge $(CONF_LIBS) $(CONF_CFLAGS)
+	@$(MPI) -O3 edge.cpp -o edge $(CONF_LIBS) $(CONF_CFLAGS)
 
 debug: clean
 	@echo "\033[92mCompile with debug options\033[0m"
