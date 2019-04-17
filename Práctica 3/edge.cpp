@@ -1,6 +1,8 @@
 #include <CImg.h>
 #include <iostream>
 #include <cmath>
+#include <mpi.h>
+#include <vector>
 
 using namespace std;
 using namespace cimg_library;
@@ -67,8 +69,14 @@ CImg<int> gaussianKernel(const CImg<int> original){
 				for (dy = -2; dy <= 2; dy++){
 					pixelweight = weighting[dx + 2][dy + 2];
 
+
 					// Get pixel
-					pixel = original(x + dx, y + dy, 0, 0);
+					if(x + dx >= original.width() || y + dy >= original.height()){
+						pixel = original(x, y, 0, 0);
+					}
+					else{
+						pixel = original(x + dx, y + dy, 0, 0);
+					}
 
 					// Apply weighting
 					blurpixel = blurpixel + pixel * pixelweight;
@@ -85,10 +93,10 @@ CImg<int> gaussianKernel(const CImg<int> original){
 
 CImg<int> sobelFilter(const CImg<int> original){
 	// Define image to store gradient intensity
-	CImg<int> imggrad(original.width(), original.height(), 1, 1, 1);
-	
+	CImg<int> imggrad(original.width(), original.height(), 1, 1, 0);
+
 	// Define image to store gradient direction
-	CImg<int> imggraddir(original.width(), original.height(), 1, 1, 1);
+	CImg<int> imggraddir(original.width(), original.height(), 1, 1, 0);
 
 	// Definitions
 	int pix[3];
@@ -124,6 +132,22 @@ CImg<int> sobelFilter(const CImg<int> original){
 		}
 	}
 
+	for(int x = 0; x < original.width(); x++){
+		imggrad(x, 0, 0, 0) = 0;
+		imggrad(x, 1, 0, 0) = 0;
+		imggrad(x, 2, 0, 0) = 0;
+		imggrad(x, original.height() - 1, 0, 0) = 0;
+	}
+
+	for(int y = 0; y < original.height(); y++){
+		imggrad(0, y, 0, 0) = 0;
+		imggrad(1, y, 0, 0) = 0;
+		imggrad(2, y, 0, 0) = 0;
+		imggrad(original.width() - 1, y, 0, 0) = 0;
+		imggrad(original.width() - 2, y, 0, 0) = 0;
+		imggrad(original.width() - 3, y, 0, 0) = 0;
+	}
+
 	return imggrad;
 }
 
@@ -131,6 +155,43 @@ void edgeDetection(CImg<int> &original){
 	original = imgToGray(original);
 	original = gaussianKernel(original);
 	original = sobelFilter(original);
+}
+
+vector< CImg<int> > chopImage(const CImg<int> original, int size){
+	vector< CImg<int> > img_portions;
+	int img_height = original.height();
+	int img_width = original.width();
+	int pixels_per_chunk = img_height / size;
+	int chunk_beginning = 0;
+	int chunk_end = pixels_per_chunk;
+
+	if(size == 1){
+		img_portions.push_back(original);
+	}
+	else{
+		for(int i = 0; i < size; i++){
+			img_portions.push_back(original.get_crop(0, chunk_beginning, img_width, chunk_end));
+
+			chunk_beginning = chunk_end;
+			chunk_end = chunk_end + pixels_per_chunk;
+
+			if(i == size - 1){
+				chunk_end = img_height;
+			}
+		}
+	}
+
+	return img_portions;
+}
+
+CImg<int> reduce(vector< CImg<int> > pieces, int size){
+	CImg<int> result;
+
+	for(int i = 0; i < size; i++){
+		result = result.append(pieces[i], 'y');
+	}
+
+	return result;
 }
 
 int main(int argc, char **argv){
@@ -143,8 +204,52 @@ int main(int argc, char **argv){
 
 	const CImg<int> img(argv[1]);
 	CImg<int> result(img);
+	vector< CImg<int> > img_portions;
 
-	edgeDetection(result);	
+	int	size, rank;
+	MPI_Status	status;
+	double start, stop, tiempo;
 
-	result.save("result.jpg");
+	start = MPI_Wtime();
+
+	/*
+	 * Initialize MPI.
+	 */
+	MPI_Init(&argc, &argv);
+
+	/*
+	 * Error check the number of processes.
+	 * Determine my rank in the world group.
+	 * The sender will be rank 0 and the receiver, rank 1.
+	 */
+	MPI_Comm_size(MPI_COMM_WORLD, &size);
+
+	img_portions = chopImage(img, size);
+
+	if (size < 2) {
+		printf("Need at least 2 processes.\n");
+		MPI_Finalize();
+
+		return(1);
+	}
+
+	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+	for(int i = rank; i < size; i++){
+		edgeDetection(img_portions[i]);
+	}
+
+	MPI_Finalize();
+
+	stop = MPI_Wtime();
+
+	tiempo = stop - start;
+
+	if(rank == 0){
+		result = reduce(img_portions, size);
+
+		result.save("result.jpg");
+
+		cout << "Tiempo en " << size << " máquinas: " << tiempo << endl;
+	}
 }
