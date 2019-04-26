@@ -315,9 +315,8 @@ hosts.txt
 *.dat
 *.pages
 CImg.h
-paul.jpg
-result.jpg
-lena.png
+*.jpg
+*.png
 edge
 .vscode/
 
