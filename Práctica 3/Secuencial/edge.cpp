@@ -1,7 +1,7 @@
 #include <CImg.h>
 #include <iostream>
 #include <cmath>
-#include <mpi.h>
+#include <ctime>
 #include <vector>
 
 using namespace std;
@@ -165,10 +165,17 @@ int main(int argc, char **argv){
 		exit(-1);
 	}
 
+	clock_t begin, end;
 	const CImg<int> img(argv[1]);
 	CImg<int> result(img);
 
-	edgeDetection(result);
+	begin = clock();
 	
+	edgeDetection(result);
+
+	end = clock();
+
 	result.save("result.jpg");
+
+	cout << "Tiempo en una máquina: " << (end - begin) / CLOCKS_PER_SEC << " segundos" << endl;
 }
