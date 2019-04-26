@@ -177,5 +177,5 @@ int main(int argc, char **argv){
 
 	result.save("result.jpg");
 
-	cout << "Tiempo en una máquina: " << (end - begin) / CLOCKS_PER_SEC << " segundos" << endl;
+	cout << "Tiempo en una máquina: " << double(end - begin) / CLOCKS_PER_SEC << " segundos" << endl;
 }
