@@ -250,6 +250,6 @@ int main(int argc, char **argv){
 
 		result.save("result.jpg");
 
-		cout << "Tiempo en " << size << " máquinas: " << tiempo << endl;
+		cout << "Tiempo en " << size << " máquinas: " << tiempo << " segundos " << endl;
 	}
 }
