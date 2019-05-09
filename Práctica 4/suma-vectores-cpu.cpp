@@ -11,6 +11,12 @@ void readfile(vector<float> &vec, string filename){
 	
 	file.open(filename);
 
+	if(!file.is_open()){
+		cerr << "No se ha podido abrir el archivo " << filename << endl;
+
+		exit(-1);
+	}
+
 	for(string line; getline(file, line);){
 		vec.push_back(stof(line));
 	}
