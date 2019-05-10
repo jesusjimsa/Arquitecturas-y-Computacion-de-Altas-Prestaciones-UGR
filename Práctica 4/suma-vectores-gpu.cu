@@ -30,7 +30,9 @@ void readfile(vector<float> &vec, string filename){
 // Kernel function to add the elements of two arrays
 __global__
 void add(float *x, float *y, int size){
-	for (int i = 0; i < size; i++){
+	int i = threadIdx.x + blockDim.x * blockIdx.x;
+
+	if(i < size){
 		y[i] = x[i] + y[i];
 	}
 }
@@ -58,10 +60,12 @@ int main(void){
 		y[i] = vec[i];
 	}
 
+	cudaMemcpy(d, idata, sizeof(int) * vec.size(), cudaMemcpyHostToDevice);
+
 	begin = clock();
 
 	// Run kernel on 1M elements on the GPU
-	add<<<1, 1>>>(x, y, vec.size());
+	add<<< (int)(vec.size()/256)+1, vec.size() >>>(x, y, vec.size());
 
 	// Wait for GPU to finish before accessing on host
 	cudaDeviceSynchronize();
