@@ -1,5 +1,5 @@
-CUDA = nvcc -O3 -std=c++11 -pedantic
-ANSI_CFLAGS = -I.. -Wall -Wextra -Wfatal-errors -Werror=unknown-pragmas -Werror=unused-label
+CUDA = nvcc -O3 -std=c++11
+ANSI_CFLAGS = -I..
 VT100_CFLAGS = -Dcimg_use_vt100
 
 # Flags used to disable display capablities of CImg
@@ -24,11 +24,11 @@ CONF_CFLAGS = $(ANSI_CFLAGS) $(VT100_CFLAGS) $(NODISPLAY_CFLAGS) $(PNG_CFLAGS) $
 
 edge: clean
 	@echo "\033[92mCompile\033[0m"
-	@$(CUDA) edge.cpp -o edge $(CONF_LIBS) $(CONF_CFLAGS)
+	@$(CUDA) edge.cu -o edge $(CONF_LIBS) $(CONF_CFLAGS)
 
 debug: clean
 	@echo "\033[92mCompile with debug options\033[0m"
-	@$(CUDA) -g edge.cpp -o edge $(CONF_LIBS) $(CONF_CFLAGS)
+	@$(CUDA) -g edge.cu -o edge $(CONF_LIBS) $(CONF_CFLAGS)
 
 run: edge
 	@echo "\033[92mRun\033[0m"
