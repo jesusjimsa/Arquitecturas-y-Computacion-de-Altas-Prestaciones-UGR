@@ -9,7 +9,7 @@ using namespace std;
 
 void readfile(vector<float> &vec, string filename){
 	ifstream file;
-	
+
 	file.open(filename);
 
 	if(!file.is_open()){
@@ -29,58 +29,84 @@ void readfile(vector<float> &vec, string filename){
 
 // Kernel function to add the elements of two arrays
 __global__
-void add(float *x, float *y, int size){
+void add(float *x, float *y, float *result, int size){
 	int i = threadIdx.x + blockDim.x * blockIdx.x;
 
 	if(i < size){
-		y[i] = x[i] + y[i];
+		result[i] = x[i] + y[i];
 	}
 }
 
 int main(void){
 	clock_t begin, end;
 	vector<float> vec;
-	float *x, *y;
+	float *memoria_x, *memoria_y;
+	float *gpu_x, *gpu_y;
+	float *memoria_result, *gpu_result;
 
-	x = y = NULL;
+	memoria_x = NULL;
+	memoria_y = NULL;
+	gpu_x = NULL;
+	gpu_y = NULL;
+	memoria_x = NULL;
+	gpu_y = NULL;
 
 	readfile(vec, "data/9/input0.raw");
 
-	cudaMallocManaged(&x, vec.size()*sizeof(float));
+	// Reservar memoria para el primer array
+	cudaMallocManaged(&memoria_x, vec.size()*sizeof(float));
+	cudaMallocManaged(&gpu_x, vec.size()*sizeof(float));
 
 	for(int i = 0; i < vec.size(); i++){
-		x[i] = vec[i];
+		memoria_x[i] = vec[i];
 	}
 
 	readfile(vec, "data/9/input1.raw");
 
-	cudaMallocManaged(&y, vec.size()*sizeof(float));
+	// Reservar memoria para el segundo array
+	cudaMallocManaged(&memoria_y, vec.size()*sizeof(float));
+	cudaMallocManaged(&gpu_y, vec.size()*sizeof(float));
 
 	for(int i = 0; i < vec.size(); i++){
-		y[i] = vec[i];
+		memoria_y[i] = vec[i];
 	}
 
-	cudaMemcpy(d, idata, sizeof(int) * vec.size(), cudaMemcpyHostToDevice);
+	// Reservar memoria para el array resultante
+	cudaMallocManaged(&memoria_result, vec.size()*sizeof(float));
+	cudaMallocManaged(&gpu_result, vec.size()*sizeof(float));
+
+	// Copiar los datos en la GPU
+	cudaMemcpy(gpu_x, memoria_x, sizeof(float)*vec.size(), cudaMemcpyHostToDevice);
+	cudaMemcpy(gpu_y, memoria_y, sizeof(float)*vec.size(), cudaMemcpyHostToDevice);
+	cudaMemcpy(gpu_result, memoria_result, sizeof(float)*vec.size(), cudaMemcpyHostToDevice);
 
 	begin = clock();
 
-	// Run kernel on 1M elements on the GPU
-	add<<< (int)(vec.size()/256)+1, vec.size() >>>(x, y, vec.size());
+	// Llamar al kernel
+	// <<< Número de bloques, número de hebras >>>
+	add<<< (int)(vec.size()/256)+1, (int)vec.size() >>>(gpu_x, gpu_y, gpu_result, vec.size());
 
-	// Wait for GPU to finish before accessing on host
+	// Esperar a que la GPU termine
 	cudaDeviceSynchronize();
+
+	// Copiar los resultados en memoria
+	cudaMemcpy(memoria_result, gpu_result, sizeof(float)*vec.size(), cudaMemcpyDeviceToHost);
 
 	end = clock();
 
 	for(int i = 0; i < vec.size(); i++){
-		cout << y[i] << endl;
+		cout << memoria_result[i] << endl;
 	}
 
 	cout << "Tiempo: " << double(end - begin) / CLOCKS_PER_SEC << " segundos" << endl;
 
 	// Free memory
-	cudaFree(x);
-	cudaFree(y);
-	
+	cudaFree(memoria_x);
+	cudaFree(memoria_y);
+	cudaFree(memoria_result);
+	cudaFree(gpu_x);
+	cudaFree(gpu_y);
+	cudaFree(gpu_result);
+
 	return 0;
 }
