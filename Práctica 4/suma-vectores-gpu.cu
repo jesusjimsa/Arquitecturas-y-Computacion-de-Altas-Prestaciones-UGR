@@ -7,6 +7,38 @@
 
 using namespace std;
 
+void properties(){
+	cudaDeviceProp dev;
+	int dev_cnt = 0;
+	cudaGetDeviceCount(&dev_cnt);
+
+	cout << dev_cnt << " dispositivos" << endl;
+
+	for(int i = 0; i < dev_cnt; i++){
+		cudaGetDeviceProperties(&dev, i);
+
+		cout << "Device:" << i << endl;
+		cout << "name:" << dev.name << endl;
+		cout << "Compute capability " << dev.major << "." << dev.minor << endl;
+		cout << "total global memory(KB): " << dev.totalGlobalMem/1024 << endl;
+		cout << "shared mem per block: " << dev.sharedMemPerBlock << endl;
+		cout << "regs per block: " << dev.regsPerBlock << endl;
+		cout << "warp size: " << dev.warpSize << endl;
+		cout << "max threads per block: " << dev.maxThreadsPerBlock << endl;
+		cout << "max thread dim z:" << dev.maxThreadsDim[0] << " y:" << dev.maxThreadsDim[1] << " x:" << dev.maxThreadsDim[2] << endl;
+		cout << "max grid size z:" << dev.maxGridSize[0] << " y:" << dev.maxGridSize[1] << " x:" << dev.maxGridSize[2] << endl;
+		cout << "clock rate(KHz):" << dev.clockRate << endl;
+		cout << "total constant memory (bytes): " << dev.totalConstMem << endl;
+		cout << "multiprocessor count " << dev.multiProcessorCount << endl;
+		cout << "integrated: " << dev.integrated << endl;
+		cout << "async engine count: " << dev.asyncEngineCount << endl;
+		cout << "memory bus width: " << dev.memoryBusWidth << endl;
+		cout << "memory clock rate (KHz): " << dev.memoryClockRate << endl;
+		cout << "L2 cache size (bytes): " << dev.l2CacheSize << endl;
+		cout << "max threads per SM: " << dev.maxThreadsPerMultiProcessor << endl;
+	}
+}
+
 void readfile(vector<float> &vec, string filename){
 	ifstream file;
 
@@ -43,6 +75,8 @@ int main(void){
 	float *memoria_x, *memoria_y;
 	float *gpu_x, *gpu_y;
 	float *memoria_result, *gpu_result;
+	ofstream file;
+
 
 	memoria_x = NULL;
 	memoria_y = NULL;
@@ -50,6 +84,9 @@ int main(void){
 	gpu_y = NULL;
 	memoria_x = NULL;
 	gpu_y = NULL;
+
+	// Imprimir características
+	properties();
 
 	readfile(vec, "data/9/input0.raw");
 
@@ -94,9 +131,13 @@ int main(void){
 
 	end = clock();
 
+	file.open("result.raw");
+
 	for(int i = 0; i < vec.size(); i++){
-		cout << memoria_result[i] << endl;
+		file << memoria_result[i] << endl;
 	}
+
+	file.close();
 
 	cout << "Tiempo: " << double(end - begin) / CLOCKS_PER_SEC << " segundos" << endl;
 
