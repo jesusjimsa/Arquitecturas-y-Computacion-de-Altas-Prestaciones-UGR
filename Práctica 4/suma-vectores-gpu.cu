@@ -17,7 +17,7 @@ void properties(){
 	for(int i = 0; i < dev_cnt; i++){
 		cudaGetDeviceProperties(&dev, i);
 
-		cout << "Device:" << i << endl;
+		cout << "Device: " << i << endl;
 		cout << "name:" << dev.name << endl;
 		cout << "Compute capability " << dev.major << "." << dev.minor << endl;
 		cout << "total global memory(KB): " << dev.totalGlobalMem/1024 << endl;
