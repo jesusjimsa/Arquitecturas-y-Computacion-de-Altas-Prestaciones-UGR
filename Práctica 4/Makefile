@@ -1,5 +1,7 @@
 CXX=/usr/bin/g++-7 -O3 -std=c++11
-NVCC=nvcc -O3 -std=c++11
+NVCC=nvcc -g -O3 -std=c++11 -Wno-deprecated-gpu-targets
+
+all: cpu gpu
 
 cpu:
 	@echo "\033[92mCompilando suma-cpu...\033[0m"
