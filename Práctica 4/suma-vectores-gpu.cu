@@ -64,9 +64,17 @@ void readfile(vector<float> &vec, string filename){
 __global__
 void add(float *x, float *y, float *result, int *size){
 	int i = threadIdx.x + blockDim.x * blockIdx.x;
+	float sumaparcial=0;
 
 	if(i < (*size)){
 		result[i] = x[i] + y[i];
+		sumaparcial = result[i];
+
+		for(int j = 1; j < 1000; j++){
+			sumaparcial = sumaparcial + j;
+		}
+
+		result[i] += sumaparcial;
 	}
 }
 
@@ -96,7 +104,7 @@ int main(void){
 	mem_vec_size = vec.size();
 
 	// Reservar memoria para el primer array
-	cudaMallocManaged(&memoria_x, mem_vec_size*sizeof(float));
+	memoria_x = (float *)malloc(sizeof(float)*mem_vec_size);
 	cudaMallocManaged(&gpu_x, mem_vec_size*sizeof(float));
 
 	for(int i = 0; i < vec.size(); i++){
@@ -110,7 +118,8 @@ int main(void){
 	mem_vec_size = vec.size();
 
 	// Reservar memoria para el segundo array
-	cudaMallocManaged(&memoria_y, mem_vec_size*sizeof(float));
+	//cudaMallocManaged(&memoria_y, mem_vec_size*sizeof(float));
+	memoria_y = (float *)malloc(sizeof(float)*mem_vec_size);
 	cudaMallocManaged(&gpu_y, mem_vec_size*sizeof(float));
 
 	for(int i = 0; i < vec.size(); i++){
@@ -118,7 +127,7 @@ int main(void){
 	}
 
 	// Reservar memoria para el array resultante
-	cudaMallocManaged(&memoria_result, mem_vec_size*sizeof(float));
+	memoria_result = (float *)malloc(sizeof(float)*mem_vec_size);
 	cudaMallocManaged(&gpu_result, mem_vec_size*sizeof(float));
 
 	// Reservar memoria para el dato del tamaño del vector
@@ -136,13 +145,16 @@ int main(void){
 
 	// Llamar al kernel
 	// <<< Número de bloques, número de hebras >>>
-	add<<< (int)(mem_vec_size/256)+1, (int)mem_vec_size >>>(gpu_x, gpu_y, gpu_result, gpu_vec_size);
+	dim3 unBloque(64,1,1);
+	dim3 bloques((mem_vec_size/64)+1, 1, 1);
+	add<<< bloques, unBloque>>>(gpu_x, gpu_y, gpu_result, gpu_vec_size);
 
 	// Esperar a que la GPU termine
 	cudaDeviceSynchronize();
-
+	
 	// Copiar los resultados en memoria
 	cudaMemcpy(memoria_result, gpu_result, sizeof(float)*mem_vec_size, cudaMemcpyDeviceToHost);
+	
 
 	end = clock();
 
@@ -165,8 +177,8 @@ int main(void){
 	cudaFree(gpu_x);
 	cudaFree(gpu_y);
 	cudaFree(gpu_result);
+
 	cudaFree(gpu_vec_size);
-	
 	free(mem_pointer_size);
 
 	return 0;
