@@ -133,6 +133,8 @@ int main(void){
 	// Reservar memoria para el dato del tamaño del vector
 	cudaMallocManaged(&gpu_vec_size, sizeof(int));
 
+	begin = clock();
+
 	*mem_pointer_size = mem_vec_size;
 
 	// Copiar los datos en la GPU
@@ -140,8 +142,6 @@ int main(void){
 	cudaMemcpy(gpu_y, memoria_y, sizeof(float)*mem_vec_size, cudaMemcpyHostToDevice);
 	cudaMemcpy(gpu_result, memoria_result, sizeof(float)*mem_vec_size, cudaMemcpyHostToDevice);
 	cudaMemcpy(gpu_vec_size, mem_pointer_size, sizeof(int), cudaMemcpyHostToDevice);
-
-	begin = clock();
 
 	// Llamar al kernel
 	// <<< Número de bloques, número de hebras >>>
@@ -151,10 +151,9 @@ int main(void){
 
 	// Esperar a que la GPU termine
 	cudaDeviceSynchronize();
-	
+
 	// Copiar los resultados en memoria
 	cudaMemcpy(memoria_result, gpu_result, sizeof(float)*mem_vec_size, cudaMemcpyDeviceToHost);
-	
 
 	end = clock();
 
