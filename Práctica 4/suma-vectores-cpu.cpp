@@ -28,10 +28,17 @@ void readfile(vector<float> &vec, string filename){
 
 vector<float> suma_vectores(vector<float> first, vector<float> second){
 	vector<float> result;
+	float sumaparcial = 0;
 
 	if(first.size() == second.size()){
 		for(int i = 0; i < first.size(); i++){
-			result.push_back(first[i] + second[i]);
+			sumaparcial = first[i] + second[i];
+
+			for(int j = 1; j < 1000; j++){
+				sumaparcial = sumaparcial + j;
+			}
+
+			result.push_back(sumaparcial);
 		}
 	}
 
