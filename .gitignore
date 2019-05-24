@@ -311,7 +311,7 @@ $RECYCLE.BIN/
 *.lnk
 
 # Mine
-hosts.txt
+*.txt
 *.dat
 *.pages
 CImg.h
