@@ -1,5 +1,5 @@
-CUDA = nvcc -O3 -std=c++11
-ANSI_CFLAGS = -I..
+CUDA = nvcc -g -O3 -std=c++11 -Wno-deprecated-gpu-targets
+ANSI_CFLAGS = -I.. -lpthread
 VT100_CFLAGS = -Dcimg_use_vt100
 
 # Flags used to disable display capablities of CImg
