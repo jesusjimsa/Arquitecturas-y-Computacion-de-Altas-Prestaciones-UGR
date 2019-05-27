@@ -7,7 +7,7 @@
 using namespace std;
 using namespace cimg_library;
 
-void edgeDetection(int *image_pointer, int width, int height);
+void edgeDetection(int **image_pointer, int width, int height);
 
 void imgToGray(CImg<int> &original){
 	// 			(size_x, size_y, size_z, dv, default_fill)
@@ -41,12 +41,38 @@ void imgToGray(CImg<int> &original){
 }
 
 CImg<int> process(const CImg<int> original){
-	CImg<int> result;
-	int *image_pointer = original.data();
+	CImg<int> result(original);
 	int width = original.width();
 	int height = original.height();
+	int **image_pointer = new int*[width];
+
+	// Reservar memoria
+	for(int i = 0; i < width; i++){
+		image_pointer[i] = new int[height];
+	}
+
+	// Guardar datos en el puntero
+	for(int i = 0; i < width; i++){
+		for(int j = 0; j < height; j++){
+			image_pointer[i][j] = original[i][j];
+		}
+	}
 
 	edgeDetection(image_pointer, width, height);
+
+	// Guardar resultado en imagen
+	for(int i = 0; i < width; i++){
+		for(int j = 0; j < height; j++){
+			result[i][j] = image_pointer[i][j];
+		}
+	}
+
+	// Liberar memoria
+	for(int i = 0; i < width; i++){
+		delete[] image_pointer[i];
+	}
+
+	delete[] image_pointer;
 
 	return result;
 }
