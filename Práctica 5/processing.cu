@@ -6,11 +6,11 @@
 using namespace std;
 
 __global__
-void gaussianKernel(int &original, int *original_width, int *original_height, int *size){
+void gaussianKernel(int **original, int *original_width, int *original_height, int *size){
 	int id = threadIdx.x + blockDim.x * blockIdx.x;
 
 	// Declarar imagen para guardar el difuminado
-	int **imgblur = new int[(*original_width)];
+	int **imgblur = new int*[(*original_width)];
 
 	for(int i = 0; i < (*original_height); i++){
 		imgblur[i] = new int[(*original_height)];
@@ -47,10 +47,10 @@ void gaussianKernel(int &original, int *original_width, int *original_height, in
 
 						// Conseguir pixel
 						if(x + dx >= (*original_width) || y + dy >= (*original_height)){
-							pixel = original[x, y];
+							pixel = original[x][y];
 						}
 						else{
-							pixel = original[x + dx, y + dy];
+							pixel = original[x + dx][y + dy];
 						}
 
 						// Aplicar peso
@@ -62,7 +62,9 @@ void gaussianKernel(int &original, int *original_width, int *original_height, in
 				imgblur[x][y] = (blurpixel / 159);
 			}
 		}
-
+		
+		// TODO!!!!
+		// error: a value of type "int **" cannot be assigned to an entity of type "int"
 		original = imgblur;
 	}
 
@@ -75,14 +77,14 @@ void gaussianKernel(int &original, int *original_width, int *original_height, in
 }
 
 __global__
-void sobelFilter(int &original, int *original_width, int *original_height, int *size){
+void sobelFilter(int **original, int *original_width, int *original_height, int *size){
 	int id = threadIdx.x + blockDim.x * blockIdx.x;
 
 	// Declarar imagen para guardar la intensidad del gradiente
-	int **imggrad = new int[(*original_width)];
+	int **imggrad = new int*[(*original_width)];
 
 	// Declarar imagen para guardar la dirección del gradiente
-	int **imggraddir = new int[(*original_width)];
+	int **imggraddir = new int*[(*original_width)];
 
 	for(int i = 0; i < (*original_height); i++){
 		imggrad[i] = new int[(*original_height)];
@@ -153,7 +155,7 @@ void sobelFilter(int &original, int *original_width, int *original_height, int *
 	delete[] imggraddir;
 }
 
-void edgeDetection(int *image_pointer, int width, int height){
+void edgeDetection(int **image_pointer, int width, int height){
 // <<< Número de bloques, número de hebras >>>
 	dim3 unBloque(64,1,1);
 	dim3 bloques((width/64)+1, 1, 1);
