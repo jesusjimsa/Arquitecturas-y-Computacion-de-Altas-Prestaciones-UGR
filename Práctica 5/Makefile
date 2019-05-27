@@ -24,7 +24,7 @@ CONF_CFLAGS = $(ANSI_CFLAGS) $(VT100_CFLAGS) $(NODISPLAY_CFLAGS) $(PNG_CFLAGS) $
 
 edge: clean
 	@echo "\033[92mCompile\033[0m"
-	@$(CUDA) edge.cu -o edge $(CONF_LIBS) $(CONF_CFLAGS)
+	@$(CUDA) processing.cu -o processing $(CONF_LIBS) $(CONF_CFLAGS)
 
 debug: clean
 	@echo "\033[92mCompile with debug options\033[0m"

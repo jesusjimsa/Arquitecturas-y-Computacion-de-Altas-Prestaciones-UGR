@@ -7,6 +7,8 @@
 using namespace std;
 using namespace cimg_library;
 
+void edgeDetection(int *image_pointer, int width, int height);
+
 void imgToGray(CImg<int> &original){
 	// 			(size_x, size_y, size_z, dv, default_fill)
 	CImg<int> gray(original.width(), original.height(), 1, 1, 0);
