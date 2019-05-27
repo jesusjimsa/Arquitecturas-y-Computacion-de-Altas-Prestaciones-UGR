@@ -9,16 +9,20 @@ __global__
 void gaussianKernel(int &original, int *original_width, int *original_height, int *size){
 	int id = threadIdx.x + blockDim.x * blockIdx.x;
 
-	// Define image to store blur
-	int imgblur[(*original_width)][(*original_height)];
+	// Declarar imagen para guardar el difuminado
+	int imgblur[(*original_width)] = new int[(*original_width)];
 
-	// Definitions
+	for(int i = 0; i < (*original_height); i++){
+		imgblur[i] = new int[(*original_height)];
+	}
+
+	// Declaraciones
 	unsigned int blurpixel;
 	signed int dx, dy;
 	unsigned int pixelweight;
 	unsigned int pixel;
 
-	// Define gaussian blur weightings array
+	// Declarar el array de pesos para el difuminado gaussiano
 	int weighting[5][5] = {
 		{2, 4, 5, 4, 2},
 		{4, 9, 12, 9, 4},
@@ -28,20 +32,20 @@ void gaussianKernel(int &original, int *original_width, int *original_height, in
 	};
 
 	if(id < (*size)){
-		// Get each pixel and apply the blur filter
+		// Aplicar el flitro a cada pixel
 		for (int x = 2; x <= (*original_width) - 2; x++){
 			for (int y = 2; y <= (*original_height) - 2; y++){
 
-				// Clear blurpixel
+				// Limpiar blurpixel
 				blurpixel = 0;
 
-				// +- 2 for each pixel and calculate the weighting
+				// +-2 para cada pixel y calcular el peso
 				for (dx = -2; dx <= 2; dx++){
 					for (dy = -2; dy <= 2; dy++){
 						pixelweight = weighting[dx + 2][dy + 2];
 
 
-						// Get pixel
+						// Conseguir pixel
 						if(x + dx >= (*original_width) || y + dy >= (*original_height)){
 							pixel = original[x, y];
 						}
@@ -49,61 +53,73 @@ void gaussianKernel(int &original, int *original_width, int *original_height, in
 							pixel = original[x + dx, y + dy];
 						}
 
-						// Apply weighting
+						// Aplicar peso
 						blurpixel = blurpixel + pixel * pixelweight;
 					}
 				}
 
-				// Write pixel to blur image
-				imgblur[x, y] = (blurpixel / 159);
+				// Escribir pixel para difuminar la imagen
+				imgblur[x][y] = (blurpixel / 159);
 			}
 		}
 
 		original = imgblur;
 	}
+
+	// Liberar memoria
+	for(int i = 0; i < (*original_height); i++){
+		delete[] imgblur[i];
+	}
+
+	delete[] imgblur;
 }
 
 __global__
 void sobelFilter(int &original, int *original_width, int *original_height, int *size){
 	int id = threadIdx.x + blockDim.x * blockIdx.x;
 
-	// Define image to store gradient intensity
-	int imggrad[(*original_width)][(*original_height)];
+	// Declarar imagen para guardar la intensidad del gradiente
+	int imggrad[(*original_width)] = new int[(*original_width)];
 
-	// Define image to store gradient direction
-	int imggraddir[(*original_width)][(*original_height)];
+	// Declarar imagen para guardar la dirección del gradiente
+	int imggraddir[(*original_width)] = new int[(*original_width)];
 
-	// Definitions
+	for(int i = 0; i < (*original_height); i++){
+		imggrad[i] = new int[(*original_height)];
+		imggraddir[i] = new int[(*original_height)];
+	}
+
+	// Declaraciones
 	int pix[3];
 	int gradx, grady;
 	int graddir, grad;
 
 	if(id < (*size)){
-		// Get pixels and calculate gradient and direction
+		// Conseguir pixeles y calcular el gradiente y su dirección
 		for (int x = 1; x <= (*original_width) - 1; x++){
 			for (int y = 1; y <= (*original_height) - 1; y++){
-				// Get source pixels to calculate the intensity and direction
-				pix[0] = original[x][y];	 // main pixel
-				pix[1] = original[x - 1][y]; // pixel left
-				pix[2] = original[x][y - 1]; // pixel above
+				// Conseguir los pixeles de origen para calcular la dirección e intensidad
+				pix[0] = original[x][y];	 // pixel principal
+				pix[1] = original[x - 1][y]; // pixel izquierdo
+				pix[2] = original[x][y - 1]; // pixel encima
 
-				// get value for x gradient
+				// Conseguir valor para gradiente x
 				gradx = pix[0] - pix[1];
 
-				// get value for y gradient
+				// Conseguir valor para gradiente y
 				grady = pix[0] - pix[2];
 
-				// Calculate gradient direction
-				// We want this rounded to 0,1,2,3 which represents 0, 45, 90, 135 degrees
+				// Calcular dirección del gradiente
+				// Queremos redondearlo a 0, 1, 2, 3 que representa 0, 45, 90, 135 grados
 				graddir = (int)(abs(atan2(grady, gradx)) + 0.22) * 80;
 
-				// Store gradient direction
-				imggraddir[x, y] = graddir;
+				// Guardar dirección del gradiente
+				imggraddir[x][y] = graddir;
 
-				// Calculate gradient
+				// Calcular gradiente
 				grad = (int)sqrt(gradx * gradx + grady * grady) * 2;
 
-				// Store pixel
+				// Guardar pixel
 				imggrad[x][y] = grad;
 			}
 		}
@@ -126,6 +142,15 @@ void sobelFilter(int &original, int *original_width, int *original_height, int *
 
 		original = imggrad;
 	}
+
+	// Liberar memoria
+	for(int i = 0; i < (*original_height); i++){
+		delete[] imggrad[i];
+		delete[] imggraddir[i];
+	}
+
+	delete[] imggrad;
+	delete[] imggraddir;
 }
 
 void edgeDetection(int *image_pointer, int width, int height){
