@@ -4,7 +4,6 @@
 #include <vector>
 
 using namespace std;
-using namespace cimg_library;
 
 __global__
 void gaussianKernel(int &original, int width, int height, int *size){
@@ -69,10 +68,10 @@ void sobelFilter(int &original, int width, int height, int *size){
 	int id = threadIdx.x + blockDim.x * blockIdx.x;
 
 	// Define image to store gradient intensity
-	CImg<int> imggrad(original_width, original_height, 1, 1, 0);
+	int imggrad[original_width, original_height];
 
 	// Define image to store gradient direction
-	CImg<int> imggraddir(original_width, original_height, 1, 1, 0);
+	int imggraddir[original_width, original_height];
 
 	// Definitions
 	int pix[3];
@@ -84,9 +83,9 @@ void sobelFilter(int &original, int width, int height, int *size){
 		for (int x = 1; x <= original_width - 1; x++){
 			for (int y = 1; y <= original_height - 1; y++){
 				// Get source pixels to calculate the intensity and direction
-				pix[0] = original(x, y, 0, 0);	 // main pixel
-				pix[1] = original(x - 1, y, 0, 0); // pixel left
-				pix[2] = original(x, y - 1, 0, 0); // pixel above
+				pix[0] = original[x, y];	 // main pixel
+				pix[1] = original[x - 1, y]; // pixel left
+				pix[2] = original[x, y - 1]; // pixel above
 
 				// get value for x gradient
 				gradx = pix[0] - pix[1];
@@ -99,30 +98,30 @@ void sobelFilter(int &original, int width, int height, int *size){
 				graddir = (int)(abs(atan2(grady, gradx)) + 0.22) * 80;
 
 				// Store gradient direction
-				imggraddir(x, y, 0, 0) = graddir;
+				imggraddir[x, y] = graddir;
 
 				// Calculate gradient
 				grad = (int)sqrt(gradx * gradx + grady * grady) * 2;
 
 				// Store pixel
-				imggrad(x, y, 0, 0) = grad;
+				imggrad[x, y] = grad;
 			}
 		}
 
 		for(int x = 0; x < original_width; x++){
-			imggrad(x, 0, 0, 0) = 0;
-			imggrad(x, 1, 0, 0) = 0;
-			imggrad(x, 2, 0, 0) = 0;
-			imggrad(x, original_height - 1, 0, 0) = 0;
+			imggrad[x, 0] = 0;
+			imggrad[x, 1] = 0;
+			imggrad[x, 2] = 0;
+			imggrad[x, original_height - 1] = 0;
 		}
 
 		for(int y = 0; y < original_height; y++){
-			imggrad(0, y, 0, 0) = 0;
-			imggrad(1, y, 0, 0) = 0;
-			imggrad(2, y, 0, 0) = 0;
-			imggrad(original_width - 1, y, 0, 0) = 0;
-			imggrad(original_width - 2, y, 0, 0) = 0;
-			imggrad(original_width - 3, y, 0, 0) = 0;
+			imggrad[0, y] = 0;
+			imggrad[1, y] = 0;
+			imggrad[2, y] = 0;
+			imggrad[original_width - 1, y] = 0;
+			imggrad[original_width - 2, y] = 0;
+			imggrad[original_width - 3, y] = 0;
 		}
 
 		original = imggrad;
@@ -133,46 +132,35 @@ void edgeDetection(int *image_pointer, int width, int height){
 // <<< Número de bloques, número de hebras >>>
 	dim3 unBloque(64,1,1);
 	dim3 bloques((width/64)+1, 1, 1);
-	int *img_size = (int *)malloc(sizeof(int));
+	int *img_size = width * height;
 	int *gpu_img_size = NULL;
 	int *gpu_img = NULL;
-
-	*img_size = width * height;
+	int *gpu_width = NULL;
+	int *gpu_height = NULL;
 
 	// Reserva de memoria en la GPU
 	cudaMalloc((void **) gpu_img, img_size*sizeof(int));
 	cudaMalloc((void **) gpu_img_size, sizeof(int));
+	cudaMalloc((void **) gpu_width, sizeof(int));
+	cudaMalloc((void **) gpu_height, sizeof(int));
 
 	// Copia de memoria en la GPU
 	cudaMemcpy(gpu_img, data, img_size*sizeof(int), cudaMemcpyHostToDevice);
 	cudaMemcpy(gpu_img_size, img_size, sizeof(int), cudaMemcpyHostToDevice);
+	cudaMemcpy(gpu_width, &width, sizeof(int), cudaMemcpyHostToDevice);
+	cudaMemcpy(gpu_height, &height, sizeof(int), cudaMemcpyHostToDevice);
 
 	// Llamada a los kernel
 	// imgToGray<<< bloques, unBloque >>>(gpu_img, gpu_img_size);
 	// cudaDeviceSynchronize();
-	gaussianKernel<<< bloques, unBloque >>>(gpu_img, gpu_img_size);
+	gaussianKernel<<< bloques, unBloque >>>(gpu_img, gpu_width, gpu_height, gpu_img_size);
 	cudaDeviceSynchronize();
-	sobelFilter<<< bloques, unBloque >>>(gpu_img, gpu_img_size);
+	sobelFilter<<< bloques, unBloque >>>(gpu_img, gpu_width, gpu_height, gpu_img_size);
 	cudaDeviceSynchronize();
-}
 
-int main(int argc, char **argv){
-	if(argc != 2){
-		cout << "\033[31mTienes que escribir la ruta de la imagen!!\033[0m" << endl;
-		cout << "\033[31mEjemplo: \033[32m./edge lena.png\033[0m" << endl;
-
-		exit(-1);
-	}
-
-	clock_t begin, end;
-
-	begin = clock();
-
-	edgeDetection(result);
-
-	end = clock();
-
-	result.save("result.jpg");
-
-	cout << "Tiempo en una máquina: " << double(end - begin) / CLOCKS_PER_SEC << " segundos" << endl;
+	cudaFree(gpu_img_size);
+	cudaFree(gpu_img);
+	cudaFree(gpu_width);
+	cudaFree(gpu_height);
+	free(img_size);
 }
