@@ -10,7 +10,7 @@ void gaussianKernel(int &original, int *original_width, int *original_height, in
 	int id = threadIdx.x + blockDim.x * blockIdx.x;
 
 	// Declarar imagen para guardar el difuminado
-	int imgblur[(*original_width)] = new int[(*original_width)];
+	int **imgblur = new int[(*original_width)];
 
 	for(int i = 0; i < (*original_height); i++){
 		imgblur[i] = new int[(*original_height)];
@@ -79,10 +79,10 @@ void sobelFilter(int &original, int *original_width, int *original_height, int *
 	int id = threadIdx.x + blockDim.x * blockIdx.x;
 
 	// Declarar imagen para guardar la intensidad del gradiente
-	int imggrad[(*original_width)] = new int[(*original_width)];
+	int **imggrad = new int[(*original_width)];
 
 	// Declarar imagen para guardar la dirección del gradiente
-	int imggraddir[(*original_width)] = new int[(*original_width)];
+	int **imggraddir = new int[(*original_width)];
 
 	for(int i = 0; i < (*original_height); i++){
 		imggrad[i] = new int[(*original_height)];
