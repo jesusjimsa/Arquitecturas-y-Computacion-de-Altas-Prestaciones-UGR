@@ -52,7 +52,7 @@ void process(CImg<int> &original){
 	// Guardar datos en el puntero
 	for(int i = 0; i < width; i++){
 		for(int j = 0; j < height; j++){
-			image_pointer[i][j] = original[i][j];
+			image_pointer[i][j] = original(i, j, 0, 0);
 		}
 	}
 
@@ -61,7 +61,7 @@ void process(CImg<int> &original){
 	// Guardar resultado en imagen
 	for(int i = 0; i < width; i++){
 		for(int j = 0; j < height; j++){
-			original[i][j] = image_pointer[i][j];
+			original(i, j, 0, 0) = image_pointer[i][j];
 		}
 	}
 
@@ -88,7 +88,7 @@ int main(int argc, char **argv){
 	begin = clock();
 
 	imgToGray(result);
-	result = process(result);
+	process(result);
 
 	end = clock();
 
