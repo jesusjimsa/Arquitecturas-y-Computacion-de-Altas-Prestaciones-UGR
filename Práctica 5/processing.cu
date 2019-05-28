@@ -1,7 +1,4 @@
-#include <iostream>
-#include <cmath>
-#include <ctime>
-#include <vector>
+#include <processing.h>
 
 using namespace std;
 
@@ -113,13 +110,13 @@ void sobelFilter(int **original, int *original_width, int *original_height, int 
 
 				// Calcular dirección del gradiente
 				// Queremos redondearlo a 0, 1, 2, 3 que representa 0, 45, 90, 135 grados
-				graddir = (int)(abs(atan2(grady, gradx)) + 0.22) * 80;
+				graddir = (int)(abs(atan2f(grady, gradx)) + 0.22) * 80;
 
 				// Guardar dirección del gradiente
 				imggraddir[x][y] = graddir;
 
 				// Calcular gradiente
-				grad = (int)sqrt(gradx * gradx + grady * grady) * 2;
+				grad = (int)sqrtf(gradx * gradx + grady * grady) * 2;
 
 				// Guardar pixel
 				imggrad[x][y] = grad;
@@ -162,7 +159,7 @@ void edgeDetection(int **image_pointer, int width, int height){
 	int *img_size = (int *)malloc(sizeof(int));
 	int *img_width = (int *)malloc(sizeof(int));
 	int *img_height = (int *)malloc(sizeof(int));
-	int *gpu_img = NULL;
+	int **gpu_img = NULL;
 	int *gpu_img_size = NULL;
 	int *gpu_width = NULL;
 	int *gpu_height = NULL;
@@ -172,13 +169,13 @@ void edgeDetection(int **image_pointer, int width, int height){
 	*img_height = height;
 
 	// Reserva de memoria en la GPU
-	cudaMalloc((void **) gpu_img, img_size*sizeof(int));
+	cudaMalloc((void **) gpu_img, (*img_size)*sizeof(int));
 	cudaMalloc((void **) gpu_img_size, sizeof(int));
 	cudaMalloc((void **) gpu_width, sizeof(int));
 	cudaMalloc((void **) gpu_height, sizeof(int));
 
 	// Copia de memoria en la GPU
-	cudaMemcpy(gpu_img, image_pointer, img_size*sizeof(int), cudaMemcpyHostToDevice);
+	cudaMemcpy(gpu_img, image_pointer, (*img_size)*sizeof(int), cudaMemcpyHostToDevice);
 	cudaMemcpy(gpu_img_size, img_size, sizeof(int), cudaMemcpyHostToDevice);
 	cudaMemcpy(gpu_width, img_width, sizeof(int), cudaMemcpyHostToDevice);
 	cudaMemcpy(gpu_height, img_height, sizeof(int), cudaMemcpyHostToDevice);
@@ -196,5 +193,6 @@ void edgeDetection(int **image_pointer, int width, int height){
 	cudaFree(gpu_width);
 	cudaFree(gpu_height);
 	free(img_size);
-
+	free(img_width);
+	free(img_height);
 }

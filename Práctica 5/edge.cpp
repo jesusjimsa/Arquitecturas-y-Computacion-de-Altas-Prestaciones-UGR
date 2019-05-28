@@ -3,11 +3,10 @@
 #include <ctime>
 #include <vector>
 #include <CImg.h>
+#include <processing.h>
 
 using namespace std;
 using namespace cimg_library;
-
-void edgeDetection(int **image_pointer, int width, int height);
 
 void imgToGray(CImg<int> &original){
 	// 			(size_x, size_y, size_z, dv, default_fill)
@@ -40,8 +39,7 @@ void imgToGray(CImg<int> &original){
 	original = gray;
 }
 
-CImg<int> process(const CImg<int> original){
-	CImg<int> result(original);
+void process(CImg<int> &original){
 	int width = original.width();
 	int height = original.height();
 	int **image_pointer = new int*[width];
@@ -63,7 +61,7 @@ CImg<int> process(const CImg<int> original){
 	// Guardar resultado en imagen
 	for(int i = 0; i < width; i++){
 		for(int j = 0; j < height; j++){
-			result[i][j] = image_pointer[i][j];
+			original[i][j] = image_pointer[i][j];
 		}
 	}
 
@@ -73,8 +71,6 @@ CImg<int> process(const CImg<int> original){
 	}
 
 	delete[] image_pointer;
-
-	return result;
 }
 
 int main(int argc, char **argv){
@@ -91,7 +87,8 @@ int main(int argc, char **argv){
 
 	begin = clock();
 
-	edgeDetection(result);
+	imgToGray(result);
+	result = process(result);
 
 	end = clock();
 
