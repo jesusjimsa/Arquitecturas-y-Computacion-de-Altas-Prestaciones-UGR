@@ -39,38 +39,31 @@ void imgToGray(CImg<int> &original){
 	original = gray;
 }
 
-void process(CImg<int> &original){
+CImg<int> process(CImg<int> &original){
 	int width = original.width();
 	int height = original.height();
-	int **image_pointer = new int*[width];
-
-	// Reservar memoria
-	for(int i = 0; i < width; i++){
-		image_pointer[i] = new int[height];
-	}
+	int *image_pointer = (int *)malloc(sizeof(int) * height * width);
 
 	// Guardar datos en el puntero
 	for(int i = 0; i < width; i++){
 		for(int j = 0; j < height; j++){
-			image_pointer[i][j] = original(i, j, 0, 0);
+			(*image_pointer + i * height + j) = original(i, j, 0, 0);
 		}
 	}
 
-	image_pointer = edgeDetection(image_pointer, width, height);
+	edgeDetection(image_pointer, width, height);
 
 	// Guardar resultado en imagen
 	for(int i = 0; i < width; i++){
 		for(int j = 0; j < height; j++){
-			original(i, j, 0, 0) = image_pointer[i][j];
+			original(i, j, 0, 0) = (*image_pointer + i * height + j);
 		}
 	}
 
 	// Liberar memoria
-	for(int i = 0; i < width; i++){
-		delete[] image_pointer[i];
-	}
+	free(image_pointer)
 
-	delete[] image_pointer;
+	return original;
 }
 
 int main(int argc, char **argv){
@@ -88,7 +81,7 @@ int main(int argc, char **argv){
 	begin = clock();
 
 	imgToGray(result);
-	process(result);
+	result = process(result);
 
 	end = clock();
 
