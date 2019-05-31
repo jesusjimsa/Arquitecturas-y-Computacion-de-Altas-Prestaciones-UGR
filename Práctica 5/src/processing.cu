@@ -59,9 +59,7 @@ void gaussianKernel(int **original, int *original_width, int *original_height, i
 				imgblur[x][y] = (blurpixel / 159);
 			}
 		}
-		
-		// TODO!!!!
-		// error: a value of type "int **" cannot be assigned to an entity of type "int"
+
 		original = imgblur;
 	}
 
@@ -152,8 +150,8 @@ void sobelFilter(int **original, int *original_width, int *original_height, int 
 	delete[] imggraddir;
 }
 
-void edgeDetection(int **image_pointer, int width, int height){
-// <<< Número de bloques, número de hebras >>>
+int **edgeDetection(int **image_pointer, int width, int height){
+	// <<< Número de bloques, número de hebras >>>
 	dim3 unBloque(64,1,1);
 	dim3 bloques((width/64)+1, 1, 1);
 	int *img_size = (int *)malloc(sizeof(int));
@@ -181,12 +179,12 @@ void edgeDetection(int **image_pointer, int width, int height){
 	cudaMemcpy(gpu_height, img_height, sizeof(int), cudaMemcpyHostToDevice);
 
 	// Llamada a los kernel
-	// imgToGray<<< bloques, unBloque >>>(gpu_img, gpu_img_size);
-	// cudaDeviceSynchronize();
 	gaussianKernel<<< bloques, unBloque >>>(gpu_img, gpu_width, gpu_height, gpu_img_size);
 	cudaDeviceSynchronize();
 	sobelFilter<<< bloques, unBloque >>>(gpu_img, gpu_width, gpu_height, gpu_img_size);
 	cudaDeviceSynchronize();
+
+	cudaMemcpy(image_pointer, gpu_img, (*img_size)*sizeof(int), cudaMemcpyDeviceToHost);
 
 	cudaFree(gpu_img_size);
 	cudaFree(gpu_img);
@@ -195,4 +193,6 @@ void edgeDetection(int **image_pointer, int width, int height){
 	free(img_size);
 	free(img_width);
 	free(img_height);
+
+	return image_pointer;
 }

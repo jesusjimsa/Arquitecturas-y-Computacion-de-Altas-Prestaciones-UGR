@@ -3,10 +3,10 @@ BIN = bin
 INC = include
 LIB = lib
 SRC = src
-CUDA = nvcc -g -dc -O3 -std=c++11 -Wno-deprecated-gpu-targets -x cu
-CPP = g++ -g -O3 -std=c++11 -Wall
-ANSI_CUDA_FLAGS = -Iinclude/ -lpthread
-ANSI_CFLAGS = -I.. -Iinclude/ -lpthread
+CUDA = nvcc -g -c -std=c++11 -Wno-deprecated-gpu-targets
+CPP = nvcc -g -std=c++11 -Wno-deprecated-gpu-targets
+ANSI_FLAGS = -lpthread 
+LIBRARIES= -I.. -Iinclude
 VT100_CFLAGS = -Dcimg_use_vt100
 
 # Flags used to disable display capablities of CImg
@@ -26,22 +26,22 @@ JPEG_INCDIR =
 JPEG_CFLAGS = $(JPEG_DEFINE) $(JPEG_INCDIR)
 JPEG_LIBS = -ljpeg
 
-CONF_LIBS = $(PNG_LIBS) $(JPEG_LIBS)
-CONF_CFLAGS = $(ANSI_CFLAGS) $(VT100_CFLAGS) $(NODISPLAY_CFLAGS) $(PNG_CFLAGS) $(JPEG_CFLAGS)
+CONF_LIBS = $(LIBRARIES) $(PNG_LIBS) $(JPEG_LIBS)
+CONF_FLAGS = $(ANSI_FLAGS) $(VT100_CFLAGS) $(NODISPLAY_CFLAGS) $(PNG_CFLAGS) $(JPEG_CFLAGS)
 
 all: $(BIN)/edge
 
 $(BIN)/edge: $(LIB)/libprocessing.a $(OBJ)/edge.o
 	@echo "\033[92mCompile\033[0m"
-	@$(CPP) -o $(BIN)/edge $(OBJ)/edge.o -Llib -lprocessing
+	@$(CPP) -o $(BIN)/edge $(OBJ)/edge.o -lX11 -Llib -lprocessing $(CONF_LIBS) $(CONF_CFLAGS)
 
 $(OBJ)/edge.o: $(SRC)/edge.cpp $(INC)/processing.h
 	@echo "\033[92mObject file edge\033[0m"
-	@$(CXX) -c $(SRC)/edge.cpp -o $(OBJ)/edge.o $(CONF_LIBS) $(CONF_CFLAGS)
+	@$(CXX) -c $(SRC)/edge.cpp -o $(OBJ)/edge.o -lX11 $(CONF_LIBS) $(CONF_CFLAGS)
 
 $(OBJ)/processing.o: $(SRC)/processing.cu $(INC)/processing.h
 	@echo "\033[92mObject file processing\033[0m"
-	@$(CUDA) $(SRC)/processing.cu -o $(OBJ)/processing.o $(CONF_LIBS) $(ANSI_CUDA_FLAGS)
+	@$(CUDA) $(SRC)/processing.cu -o $(OBJ)/processing.o -lX11 $(CONF_LIBS) $(CONF_FLAGS)
 
 $(LIB)/libprocessing.a: $(OBJ)/processing.o
 	@echo "\033[92mLibrary\033[0m"
@@ -56,3 +56,6 @@ clean:
 	@rm $(OBJ)/*.o
 	@rm $(LIB)/*.a
 	@rm $(BIN)/*
+
+clena: clean
+claen: clean

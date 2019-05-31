@@ -56,7 +56,7 @@ void process(CImg<int> &original){
 		}
 	}
 
-	edgeDetection(image_pointer, width, height);
+	image_pointer = edgeDetection(image_pointer, width, height);
 
 	// Guardar resultado en imagen
 	for(int i = 0; i < width; i++){
