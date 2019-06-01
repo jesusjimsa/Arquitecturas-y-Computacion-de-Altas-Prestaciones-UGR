@@ -47,9 +47,9 @@ $(LIB)/libprocessing.a: $(OBJ)/processing.o
 	@echo "\033[92mLibrary\033[0m"
 	@ar rsv $(LIB)/libprocessing.a $(OBJ)/processing.o
 
-run: edge
+run: all
 	@echo "\033[92mRun\033[0m"
-	@./edge lena.png
+	@$(BIN)/edge lagarto.jpg
 
 clean:
 	@echo "\033[92mClean\033[0m"
