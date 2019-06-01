@@ -39,10 +39,10 @@ void gaussianKernel(int *original, int *original_width, int *original_height, in
 
 						// Conseguir pixel
 						if(x + dx >= (*original_width) || y + dy >= (*original_height)){
-							pixel = (*original + x * (*original_height) + y);
+							pixel = *(original + x * (*original_height) + y);
 						}
 						else{
-							pixel = (*original + x + dx * (*original_height) + (y + dy));
+							pixel = *(original + (x + dx) * (*original_height) + (y + dy));
 						}
 
 						// Aplicar peso
@@ -51,7 +51,7 @@ void gaussianKernel(int *original, int *original_width, int *original_height, in
 				}
 
 				// Escribir pixel para difuminar la imagen
-				(*imgblur + x * (*original_height) + y) = (blurpixel / 159);
+				*(imgblur + x * (*original_height) + y) = (blurpixel / 159);
 			}
 		}
 
@@ -62,7 +62,7 @@ void gaussianKernel(int *original, int *original_width, int *original_height, in
 }
 
 __global__
-void sobelFilter(int *original, int *original_width, int *original_height, int *size){
+void sobelFilter(int *original, int *original_width, int *original_height, int *size, int *imggrad, int *imggraddir){
 	int id = threadIdx.x + blockDim.x * blockIdx.x;
 
 	// Declaraciones
@@ -75,9 +75,9 @@ void sobelFilter(int *original, int *original_width, int *original_height, int *
 		for (int x = 1; x <= (*original_width) - 1; x++){
 			for (int y = 1; y <= (*original_height) - 1; y++){
 				// Conseguir los pixeles de origen para calcular la dirección e intensidad
-				pix[0] = (*original + x * (*original_height) + y);	 // pixel principal
-				pix[1] = (*original + (x - 1) * (*original_height) + y); // pixel izquierdo
-				pix[2] = (*original + x * (*original_height) + (y - 1)); // pixel encima
+				pix[0] = *(original + x * (*original_height) + y);	 // pixel principal
+				pix[1] = *(original + (x - 1) * (*original_height) + y); // pixel izquierdo
+				pix[2] = *(original + x * (*original_height) + (y - 1)); // pixel encima
 
 				// Conseguir valor para gradiente x
 				gradx = pix[0] - pix[1];
@@ -90,30 +90,30 @@ void sobelFilter(int *original, int *original_width, int *original_height, int *
 				graddir = (int)(abs(atan2f(grady, gradx)) + 0.22) * 80;
 
 				// Guardar dirección del gradiente
-				(*imggraddir + x * (*original_height) + y) = graddir;
+				*(imggraddir + x * (*original_height) + y) = graddir;
 
 				// Calcular gradiente
 				grad = (int)sqrtf(gradx * gradx + grady * grady) * 2;
 
 				// Guardar pixel
-				(*imggrad + x * (*original_height) + y) = grad;
+				*(imggrad + x * (*original_height) + y) = grad;
 			}
 		}
 
 		for(int x = 0; x < (*original_width); x++){
-			(*imggrad + x * (*original_height) + 0) = 0;
-			(*imggrad + x * (*original_height) + 1) = 0;
-			(*imggrad + x * (*original_height) + 2) = 0;
-			(*imggrad + x * (*original_height) + ((*original_height) - 1)) = 0;
+			*(imggrad + x * (*original_height) + 0) = 0;
+			*(imggrad + x * (*original_height) + 1) = 0;
+			*(imggrad + x * (*original_height) + 2) = 0;
+			*(imggrad + x * (*original_height) + ((*original_height) - 1)) = 0;
 		}
 
 		for(int y = 0; y < (*original_height); y++){
-			(*imggrad + 0 * (*original_height) + y) = 0;
-			(*imggrad + 1 * (*original_height) + y) = 0;
-			(*imggrad + 2 * (*original_height) + y) = 0;
-			(*imggrad + ((*original_width) - 1) * (*original_height) + y) = 0;
-			(*imggrad + ((*original_width) - 2) * (*original_height) + y) = 0;
-			(*imggrad + ((*original_width) - 3) * (*original_height) + y) = 0;
+			*(imggrad + 0 * (*original_height) + y) = 0;
+			*(imggrad + 1 * (*original_height) + y) = 0;
+			*(imggrad + 2 * (*original_height) + y) = 0;
+			*(imggrad + ((*original_width) - 1) * (*original_height) + y) = 0;
+			*(imggrad + ((*original_width) - 2) * (*original_height) + y) = 0;
+			*(imggrad + ((*original_width) - 3) * (*original_height) + y) = 0;
 		}
 		
 		printf("sobelFilter\n");
@@ -165,9 +165,9 @@ void edgeDetection(int *image_pointer, int width, int height){
 	printf("edgeDetection\n");
 
 	// Llamada a los kernel
-	gaussianKernel<<< bloques, unBloque >>>(gpu_img, gpu_width, gpu_height, gpu_img_size);
+	gaussianKernel<<< bloques, unBloque >>>(gpu_img, gpu_width, gpu_height, gpu_img_size, imgblur);
 	cudaDeviceSynchronize();
-	sobelFilter<<< bloques, unBloque >>>(gpu_img, gpu_width, gpu_height, gpu_img_size);
+	sobelFilter<<< bloques, unBloque >>>(gpu_img, gpu_width, gpu_height, gpu_img_size, imggrad, imggraddir);
 	cudaDeviceSynchronize();
 
 	cudaMemcpy(image_pointer, gpu_img, (*img_size)*sizeof(int), cudaMemcpyDeviceToHost);
@@ -176,9 +176,10 @@ void edgeDetection(int *image_pointer, int width, int height){
 	cudaFree(gpu_img);
 	cudaFree(gpu_width);
 	cudaFree(gpu_height);
+	cudaFree(imgblur);
+	cudaFree(imggrad);
+	cudaFree(imggraddir);
 	free(img_size);
 	free(img_width);
 	free(img_height);
-
-	return image_pointer;
 }

@@ -47,7 +47,7 @@ CImg<int> process(CImg<int> &original){
 	// Guardar datos en el puntero
 	for(int i = 0; i < width; i++){
 		for(int j = 0; j < height; j++){
-			(*image_pointer + i * height + j) = original(i, j, 0, 0);
+			*(image_pointer + i * height + j) = original(i, j, 0, 0);
 		}
 	}
 
@@ -56,7 +56,7 @@ CImg<int> process(CImg<int> &original){
 	// Guardar resultado en imagen
 	for(int i = 0; i < width; i++){
 		for(int j = 0; j < height; j++){
-			original(i, j, 0, 0) = (*image_pointer + i * height + j);
+			original(i, j, 0, 0) = *(image_pointer + i * height + j);
 		}
 	}
 
