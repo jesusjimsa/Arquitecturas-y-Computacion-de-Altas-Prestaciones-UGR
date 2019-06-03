@@ -3,8 +3,8 @@ BIN = bin
 INC = include
 LIB = lib
 SRC = src
-CUDA = nvcc -g -c -std=c++11 -Wno-deprecated-gpu-targets
-CPP = nvcc -g -std=c++11 -Wno-deprecated-gpu-targets
+CUDA = nvcc -g -c -O3 -std=c++11 -Wno-deprecated-gpu-targets
+CPP = nvcc -g -O3 -std=c++11 -Wno-deprecated-gpu-targets
 ANSI_FLAGS = -lpthread 
 LIBRARIES= -I.. -Iinclude
 VT100_CFLAGS = -Dcimg_use_vt100
@@ -49,7 +49,7 @@ $(LIB)/libprocessing.a: $(OBJ)/processing.o
 
 run: all
 	@echo "\033[92mRun\033[0m"
-	@$(BIN)/edge lagarto.jpg
+	@$(BIN)/edge lena.png
 
 clean:
 	@echo "\033[92mClean\033[0m"

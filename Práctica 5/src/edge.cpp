@@ -8,7 +8,7 @@
 using namespace std;
 using namespace cimg_library;
 
-void imgToGray(CImg<int> &original){
+CImg<int> imgToGray(const CImg<int> original){
 	// 			(size_x, size_y, size_z, dv, default_fill)
 	CImg<int> gray(original.width(), original.height(), 1, 1, 0);
 	CImg<int> imgR(original.width(), original.height(), 1, 3, 0);
@@ -36,10 +36,10 @@ void imgToGray(CImg<int> &original){
 		}
 	}
 
-	original = gray;
+	return gray;
 }
 
-CImg<int> process(CImg<int> &original){
+void process(CImg<int> &original){
 	int width = original.width();
 	int height = original.height();
 	int *image_pointer = (int *)malloc(sizeof(int) * height * width);
@@ -50,7 +50,7 @@ CImg<int> process(CImg<int> &original){
 			*(image_pointer + i * height + j) = original(i, j, 0, 0);
 		}
 	}
-
+	
 	edgeDetection(image_pointer, width, height);
 
 	// Guardar resultado en imagen
@@ -61,9 +61,7 @@ CImg<int> process(CImg<int> &original){
 	}
 
 	// Liberar memoria
-	free(image_pointer)
-
-	return original;
+	free(image_pointer);
 }
 
 int main(int argc, char **argv){
@@ -80,12 +78,13 @@ int main(int argc, char **argv){
 
 	begin = clock();
 
-	imgToGray(result);
-	result = process(result);
+	result = imgToGray(result);
+	process(result);
 
 	end = clock();
 
 	result.save("result.jpg");
 
-	cout << "Tiempo en una máquina: " << double(end - begin) / CLOCKS_PER_SEC << " segundos" << endl;
+	cout << "Tiempo en CUDA: " << double(end - begin) / CLOCKS_PER_SEC << " segundos" << endl;
+	// cout << argv[1] << "," << double(end - begin) / CLOCKS_PER_SEC << endl;
 }
