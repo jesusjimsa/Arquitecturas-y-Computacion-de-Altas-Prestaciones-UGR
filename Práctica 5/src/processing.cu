@@ -5,7 +5,7 @@
 using namespace std;
 
 __global__
-void gaussianKernel(int *original, int *width, int *height, int *size, int *imgblur){
+void gaussianKernel(int *original, int *width, int *height, int *imgblur){
 	int id = threadIdx.x + blockDim.x * blockIdx.x;
 
 	// Declaraciones
@@ -55,7 +55,7 @@ void gaussianKernel(int *original, int *width, int *height, int *size, int *imgb
 }
 
 __global__
-void sobelFilter(int *original, int *width, int *height, int *size, int *imggrad, int *imggraddir){
+void sobelFilter(int *original, int *width, int *height, int *imggrad, int *imggraddir){
 	int id = threadIdx.x + blockDim.x * blockIdx.x;
 
 	// Declaraciones
@@ -111,11 +111,9 @@ void edgeDetection(int *image_pointer, int width, int height){
 	// <<< Número de bloques, número de hebras >>>
 	dim3 unBloque(64, 1, 1);
 	dim3 bloques((width / 64) + 1, 1, 1);
-	int *img_size = (int *)malloc(sizeof(int));
 	int *img_width = (int *)malloc(sizeof(int));
 	int *img_height = (int *)malloc(sizeof(int));
 	int *gpu_img = NULL;
-	int *gpu_img_size = NULL;
 	int *gpu_width = NULL;
 	int *gpu_height = NULL;
 
@@ -128,13 +126,11 @@ void edgeDetection(int *image_pointer, int width, int height){
 	// Declarar imagen para guardar la dirección del gradiente
 	int *imggraddir = NULL;
 
-	*img_size = width * height;
 	*img_width = width;
 	*img_height = height;
 
 	// Reserva de memoria en la GPU
 	cudaMalloc((void **) &gpu_img, (*img_size) * sizeof(int));
-	cudaMalloc((void **) &gpu_img_size, sizeof(int));
 	cudaMalloc((void **) &gpu_width, sizeof(int));
 	cudaMalloc((void **) &gpu_height, sizeof(int));
 	cudaMalloc((void **) &imgblur, sizeof(int) * height * width);
@@ -143,19 +139,17 @@ void edgeDetection(int *image_pointer, int width, int height){
 
 	// Copia de memoria en la GPU
 	cudaMemcpy(gpu_img, image_pointer, (*img_size) * sizeof(int), cudaMemcpyHostToDevice);
-	cudaMemcpy(gpu_img_size, img_size, sizeof(int), cudaMemcpyHostToDevice);
 	cudaMemcpy(gpu_width, img_width, sizeof(int), cudaMemcpyHostToDevice);
 	cudaMemcpy(gpu_height, img_height, sizeof(int), cudaMemcpyHostToDevice);
 
 	// Llamada a los kernel
-	gaussianKernel<<< bloques, unBloque >>>(gpu_img, gpu_width, gpu_height, gpu_img_size, imgblur);
+	gaussianKernel<<< bloques, unBloque >>>(gpu_img, gpu_width, gpu_height, imgblur);
 	cudaDeviceSynchronize();
-	sobelFilter<<< bloques, unBloque >>>(imgblur, gpu_width, gpu_height, gpu_img_size, imggrad, imggraddir);
+	sobelFilter<<< bloques, unBloque >>>(imgblur, gpu_width, gpu_height, imggrad, imggraddir);
 	cudaDeviceSynchronize();
 
 	cudaMemcpy(image_pointer, imggrad, (*img_size) * sizeof(int), cudaMemcpyDeviceToHost);
 
-	cudaFree(gpu_img_size);
 	cudaFree(gpu_img);
 	cudaFree(gpu_width);
 	cudaFree(gpu_height);
